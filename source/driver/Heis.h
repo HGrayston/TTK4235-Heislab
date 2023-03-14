@@ -1,6 +1,8 @@
 #include <time.h>
 #pragma once
 
+#include "elevio.h"
+
 #define Ko_str 8
 
 //Mangler logikk implementert for når vi er mellom etasjer
