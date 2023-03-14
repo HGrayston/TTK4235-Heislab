@@ -2,14 +2,8 @@
 #include "elevio.h"
 
 
-void init(struct Heis* h){
-    nullstillko(h);
-    elevio_init();
-    getFloor(h);
-    h->retning = 2;
-    h->aktiv = 0;
-    h->targetFloor= h->currentFloor;  
-}
+// -------------------------------
+
 
 void nullstillko(struct Heis* h){
     for (int i = 0; i < Ko_str; i++)
@@ -19,114 +13,45 @@ void nullstillko(struct Heis* h){
     }
 }
 
-void getFloor(struct Heis* h){
-    if (elevio_floorSensor() != -1) 
-    {
-        h->currentFloor = elevio_floorSensor(); // Flagge slik at vi kun endrer når vi kommer i ny etasje
-    }
-}
+void getFloorinit(struct Heis* h){
 
 
-void SetTargetFloor(struct Heis* h){
-    if (h->prioriteringsko[0] != 0)
-    {
-        if(h->prioriteringsko[0] < 5)
-        {
-            h->targetFloor = h->prioriteringsko[0];
-        }
-        else
-        {
-            h->targetFloor = h->prioriteringsko[0] - 4;
-        }
-            
-        h->targetFloor = h->prioriteringsko[0]; 
-    } 
-}
-
-
-void getRetning(struct Heis* h){
-    if (h->targetFloor > h->currentFloor)
-    {
-        h->retning = 1;
-    }
-    else
-    {
-        h->retning = 0;
-    }
-}
-
-void startHeis(struct Heis* h){
-    if (h->retning == 1)
+    if (elevio_floorSensor() == -1) 
     {
         elevio_motorDirection(1);
     }
-    else
-    {
-        elevio_motorDirection(-1);
-    }
-    h->aktiv = 1;
-}
-
-
-
-void sjekkomStopp(struct Heis* h){
-    int koindex = (h->retning)*4+(h->currentFloor);
-    if (h->ko[koindex] == 1)
-    {
-        stoppEtasje(h);
-
-    }
-
-}
-
-void stoppEtasje(struct Heis* h){
+    while (elevio_floorSensor() == -1)
+    {}
+    
     elevio_motorDirection(0);
+    h->currentFloor = elevio_floorSensor();
+}
+
+void init(struct Heis* h){
+    
+    nullstillko(h);
+    elevio_init();
+    getFloorinit(h);
     h->aktiv = 0;
-// FUnkjson som starter timer     
-//    StartTimer();
-// Mens dør er åpen må vi oppdatere knapper, oppdatere target og sjekke stoppknapp
-// Funksjon som oppdaterer target
-    fjernfrako(h);
-    startHeis(h);
-    h->aktiv = 1;
-}
+    h->targetFloor = h->currentFloor;  
 
-
-
-
-void stoppknapp(struct Heis* h){
-    while (elevio_stopButton())
-    {
-        elevio_motorDirection(0);
-        h->aktiv = 0;
-        nullstillko(h);
-    }
-}
-
-
-
-void sjekketasjeknapp(struct Heis* h){
-    int koindex;
-    int retn;
-    for(int i = 0; i < 4; i++){
-        retn = 1;
-        for(int k = 0; k < 2; k++){
-            int JaNei = elevio_callButton(i,k);
-            k++;
-            koindex = i + retn*4;
-            h->ko[koindex] = JaNei;
-            if(JaNei == 1){
-                priotitering(koindex,h);
-            }
-            retn = -1;
+    for (int i = 0; i<4; i++){
+        for(int j = 0; j<3; j++){
+            elevio_buttonLamp(i, j, 0);
         }
     }
 }
 
-void priotitering(int bestilling, struct Heis* h) {
-    int in;
+
+
+
+
+//------------------------------
+
+
+void prioritering(int bestilling, struct Heis* h) {
+    int in = 0;
     for(int i = 1; i < Ko_str; i++){
-        in = 0;
         if (h->prioriteringsko[i] == bestilling){
             in = 1;
             break;
@@ -142,16 +67,215 @@ void priotitering(int bestilling, struct Heis* h) {
     }
 }
 
-void fjernfrako(struct Heis* h){
-    int index = h->currentFloor + 4*h->retning;
-    h->ko[index] = 0;
-    for(int i = 0; i < Ko_str ; i++){
-        if(h->prioriteringsko[i] == index){
-            h->prioriteringsko[i] = 0;
+void sjekketasjeknapp(struct Heis* h){
+    int koindex;
+    int retn;
+    int JaNei;
+    for(int i = 0; i < 4; i++){
+        retn = 1;
+        for(int k = 0; k < 2; k++){
+            JaNei = elevio_callButton(i,k);
+            koindex = i + retn*4;
+            h->ko[koindex] = JaNei;
+            if(JaNei == 1){
+                prioritering(koindex,h);
+                elevio_buttonLamp(i, k, 1);
+            }
+            retn--;
         }
     }
-    reorderque(h);
 }
+
+
+
+// ------------------------------------
+
+void getFloor(struct Heis* h){
+    if (elevio_floorSensor() != -1 && elevio_floorSensor() != h->currentFloor)  
+    {
+        h->currentFloor = elevio_floorSensor();
+        if(h->currentFloor >= 0){
+            elevio_floorIndicator(h->currentFloor);
+        }
+    }
+
+    if (elevio_floorSensor() != -1) {
+        elevio_buttonLamp(h->currentFloor, 2, 0);
+    }
+}
+
+
+
+void kjortilbestilling(struct Heis* h){
+    int bestillingfra;
+    if (h->prioriteringsko[0] > 3)
+    {
+        bestillingfra = h->prioriteringsko[0] - 4;
+        h->retning = 1;
+    }
+    else
+    {
+        bestillingfra = h->prioriteringsko[0];
+        h->retning = 0;
+    }
+    
+    
+    if (bestillingfra < h->currentFloor)
+    {
+        elevio_motorDirection(-1);
+        while (h->currentFloor != bestillingfra)
+        {
+            getFloor(h);
+    // --------------------------- Logikk for å oppdatere knapper = sjekketasjeknapp(h) + stoppknapp(h)
+        }
+        elevio_motorDirection(0);
+    }  
+
+    if (bestillingfra > h->currentFloor){
+        elevio_motorDirection(1);
+
+        while (h->currentFloor != bestillingfra)
+        { 
+            getFloor(h);
+    // --------------------------- Logikk for å oppdatere knapper = sjekketasjeknapp(h) + stoppknapp(h)
+        }
+        elevio_motorDirection(0);
+    } 
+}
+
+
+/*
+void feilsideavretn(struct Heis* h){
+    // Her skal vi rette opp dersom heisen er på feil side av den veien den skal.
+    // Sjekker scenario om vi skal opp men er nå plassert over den som har bestillt
+    if ((h->prioriteringsko[0] > 3) && ((h->prioriteringsko[0] - 4) < h->currentFloor))
+    {
+        elevio_motorDirection(-1);
+        while (h->currentFloor != (h->prioriteringsko[0] - 4))
+        {
+            getFloor(h);
+    // --------------------------- Logikk for å oppdatere ting
+    //        sjekketasjeknapp(h);
+    //        stoppknapp(h);
+        }
+        elevio_motorDirection(0);
+    }  
+    if ((h->prioriteringsko[0] < 4) && (h->prioriteringsko[0] > h->currentFloor)){
+        elevio_motorDirection(1);
+        while (h->currentFloor != h->prioriteringsko[0])
+        { 
+            getFloor(h);
+    // --------------------------- Logikk for å oppdatere ting
+    //        sjekketasjeknapp(h);
+    //        stoppknapp(h);
+        }
+        elevio_motorDirection(0);
+    } 
+}
+*/
+
+
+
+
+//-------------------------------------------------------------
+
+
+void oppdatertarget(struct Heis* h){
+
+// Oppdaterer target på to måter. Enten om vi skal opp eller ned
+
+// Hvis opp
+    if(h->retning == 1)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            if (elevio_callButton(i,2) == 1)
+            {
+                elevio_buttonLamp(i, 2, 1);
+                if ((i > h->currentFloor)  && (i < h->targetFloor))
+                {
+                    h->ko[i+4] = 1;
+                    h->targetFloor = i;
+                }
+                if ((i > h->currentFloor)  && (i > h->targetFloor))
+                {
+                   
+                    h->ko[i+4] = 1;
+                }
+            }
+        }
+    }
+
+//Hvis ned
+    if(h->retning == 0)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            if (elevio_callButton(i,2) == 1)
+            {
+                elevio_buttonLamp(i, 2, 1);
+                if ((i < h->currentFloor)  && (i > h->targetFloor) )
+                {
+                    h->ko[i] = 1;
+                    h->targetFloor = i;
+                }
+                if ((i < h->currentFloor)  && (i < h->targetFloor))
+                {
+                    h->ko[i] = 1;
+                }
+            }
+        }
+    }
+}
+
+
+
+void ventpabestilling(struct Heis* h){
+    time_t start_time, current_time;
+    
+    start_time = time(NULL);
+    
+    while(1){
+
+        oppdatertarget(h);
+   // Logikk for å oppdatere ting i loop     sjekketasjeknapp(h);        stoppknapp(h);
+        current_time = time(NULL);
+        if(current_time - start_time >= 3){
+            break;
+        }
+    }
+}
+
+
+
+
+// --------------------------------------------------------
+// Har nå fått bestillinger i heisen og starter å kjøre mot etasje
+
+
+
+
+void startHeis(struct Heis* h){
+    if (h->retning == 1)
+    {
+        elevio_motorDirection(1);
+    }
+    else
+    {
+        elevio_motorDirection(-1);
+    }
+}
+
+void stoppHeis(){
+    elevio_motorDirection(0);
+}
+
+
+
+
+
+
+
 
 void reorderque(struct Heis* h){
     for(int i = 0; i < Ko_str; i++)
@@ -168,86 +292,120 @@ void reorderque(struct Heis* h){
                 }
             }
         }
+    } if (h->targetFloor > h->currentFloor)
+    {
+        h->retning = 1;
+    }
+    else
+    {
+        h->retning = 0; // BYTTET OM fortegn
     }
 }
 
 
-void feilsideavretn(struct Heis* h){
-    int endre = 0;
-    if ((h->prioriteringsko[0] > 4) && ((h->prioriteringsko[0] - 4) < h->currentFloor)){
-        int endre = 1;
-        elevio_motorDirection(-1);
-        h->aktiv = 1;
+void fjernfrako(struct Heis* h){
 
-        while (h->currentFloor != (h->prioriteringsko[0] - 4))
-        {
-            getFloor(h);
-            sjekketasjeknapp(h);
-            stoppknapp(h);
 
-        }
-        elevio_motorDirection(0);
-        h->aktiv = 0;
-        stoppEtasje(h);
-    }  
-
-    if ((h->prioriteringsko[0] < 5) && (h->prioriteringsko[0] > h->currentFloor)){
-        int endre = 1;
-        elevio_motorDirection(1);
-        h->aktiv = 1;
-        while (h->currentFloor != (h->prioriteringsko[0] - 4))
-        {
-            getFloor(h);
-            sjekketasjeknapp(h);
-            stoppknapp(h);
-        }
-        elevio_motorDirection(0);
-        h->aktiv = 0;
-        stoppEtasje(h);
-    } 
-    if (endre == 0)
+    int bestillingfra;
+    if (h->prioriteringsko[0] > 3)
     {
-        h->targetFloor = h->prioriteringsko[0];
-    }   
+        bestillingfra = h->prioriteringsko[0] - 4;
+        h->retning = 1;
+    }
+    else
+    {
+        bestillingfra = h->prioriteringsko[0];
+        h->retning = 0;
+    }
+    
+    h->prioriteringsko[0] = 0;
+
+    int knapptype = 0;
+    if(h->retning == 1){
+        knapptype--;
+    } else{
+        knapptype++;
+    }
+
+    
+    elevio_buttonLamp(bestillingfra, knapptype, 0);
+/*
+    int index = h->currentFloor + 4*h->retning;
+    h->ko[index] = 0;
+    for(int i = 0; i < Ko_str ; i++){
+        if(h->prioriteringsko[i] == index){
+            h->prioriteringsko[i] = 0;
+        }
+    }
+*/
+    reorderque(h);
 }
 
 
-void oppdatertarget(struct Heis* h){
-    if(h->prioriteringsko[0] > 4) // Da skal vi opp
-    {
-        for (int i = 0; i < 4; i++)
-        {
-            if (elevio_callButton(i,2) == 1)
-            {
-                if ((i > h->currentFloor)  && (i < h->targetFloor))
-                {
-                    h->ko[i+4] = 1;
-                }
-                if ((i > h->currentFloor)  && (i > h->targetFloor))
-                {
+
+void sjekkomStopp(struct Heis* h){
+
+    if(h->currentFloor != -1){
+        if(h->retning == 1){
+            for(int i = h->currentFloor ; i < 5 ; i++){
+                if(h->ko[i+4] == 1){
                     h->targetFloor = i;
-                    h->ko[i+4] = 1;
+                    break;
+                }
+            }
+        }
+
+        if(h->retning == 0){
+            for(int i = h->currentFloor ; i > -1 ; i--){
+                if(h->ko[i] == 1){
+                    h->targetFloor = i;
+                    break;
                 }
             }
         }
     }
-    if(h->prioriteringsko[0] < 4) // Da skal vi ned
+
+
+    if (h->ko[(h->retning)*4+(h->currentFloor)] == 1)
     {
-        for (int i = 0; i < 4; i++)
-        {
-            if (elevio_callButton(i,2) == 1)
-            {
-            
-                if ((i < h->currentFloor)  && (i > h->targetFloor) )
-                {
-                    h->ko[i] = 1;
-                }
-                if ((i < h->currentFloor)  && (i < h->targetFloor))
-                {
-                    h->targetFloor = i;
-                    h->ko[i] = 1;
-                }
-            }
+        stoppHeis();
+        ventpabestilling(h);
+        h->ko[(h->retning)*4+(h->currentFloor)] = 1;
+        startHeis(h);
+    }
+
+}
+
+/*
+void stoppEtasje(struct Heis* h){
+    elevio_motorDirection(0);
+    h->aktiv = 0;
+// FUnkjson som starter timer     
+//    StartTimer();
+    time_t start_time, current_time;
+    
+    start_time = time(NULL);
+    while(1){
+        stoppknapp(h);
+        oppdatertarget(h);
+        sjekketasjeknapp(h);
+        current_time = time(NULL);
+        if(current_time - start_time >= 3){
+            break;
         }
     }
+// Mens dør er åpen må vi oppdatere knapper, oppdatere target og sjekke stoppknapp
+// Funksjon som oppdaterer target
+    fjernfrako(h);
+    startHeis(h);
+    h->aktiv = 1;
 }
+*/
+/*
+void nodStopp(int funksjonsjekk, Heis h){
+    stoppHeis();
+    while (funksjonsjekk){
+        nullstillko(h);
+    }
+}
+*/
