@@ -33,11 +33,11 @@ int main(){
 
         while (heis->targetFloor != heis->currentFloor)
         {
+            getFloor(heis);
      //   sjekkomStopp(heis); // Må inneholde funksjon for oppdatering av target ++ logikk for når mellom etasjer
      //       stoppknapp(heis);
      //       sjekketasjeknapp(heis);
-     //       oppdatertarget(heis);
-            getFloor(heis);
+            oppdatertarget(heis);
         }
         stoppHeis();
         fjernfrako(heis);
