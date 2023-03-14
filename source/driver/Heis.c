@@ -1,6 +1,5 @@
 #include "Heis.h"
 #include "elevio.h"
-#include "timer.h"
 
 
 // -------------------------------
@@ -92,12 +91,12 @@ void getFloor(struct Heis* h){
 
 
 
-void kjortilbestilling{struct Heis* h}{
+void kjortilbestilling(struct Heis* h){
     int bestillingfra;
     if (h->prioriteringsko[0] > 3)
     {
         bestillingfra = h->prioriteringsko[0] - 4;
-        h->retning = 1
+        h->retning = 1;
     }
     else
     {
@@ -134,7 +133,6 @@ void kjortilbestilling{struct Heis* h}{
 void feilsideavretn(struct Heis* h){
     // Her skal vi rette opp dersom heisen er på feil side av den veien den skal.
     // Sjekker scenario om vi skal opp men er nå plassert over den som har bestillt
-
     if ((h->prioriteringsko[0] > 3) && ((h->prioriteringsko[0] - 4) < h->currentFloor))
     {
         elevio_motorDirection(-1);
@@ -147,10 +145,8 @@ void feilsideavretn(struct Heis* h){
         }
         elevio_motorDirection(0);
     }  
-
     if ((h->prioriteringsko[0] < 4) && (h->prioriteringsko[0] > h->currentFloor)){
         elevio_motorDirection(1);
-
         while (h->currentFloor != h->prioriteringsko[0])
         { 
             getFloor(h);
@@ -160,7 +156,6 @@ void feilsideavretn(struct Heis* h){
         }
         elevio_motorDirection(0);
     } 
-
 }
 */
 
@@ -293,6 +288,8 @@ void reorderque(struct Heis* h){
 
 
 void fjernfrako(struct Heis* h){
+    h->prioriteringsko[0] = 0;
+/*
     int index = h->currentFloor + 4*h->retning;
     h->ko[index] = 0;
     for(int i = 0; i < Ko_str ; i++){
@@ -300,6 +297,7 @@ void fjernfrako(struct Heis* h){
             h->prioriteringsko[i] = 0;
         }
     }
+*/
     reorderque(h);
 }
 
@@ -309,13 +307,8 @@ void sjekkomStopp(struct Heis* h){
     if (h->ko[(h->retning)*4+(h->currentFloor)] == 1)
     {
         stoppEtasje(h);
-
     }
-
 }
-
-
-
 void stoppEtasje(struct Heis* h){
     elevio_motorDirection(0);
     h->aktiv = 0;
@@ -332,15 +325,11 @@ void stoppEtasje(struct Heis* h){
         if(current_time - start_time >= 3){
             break;
         }
-
-
     }
-
 // Mens dør er åpen må vi oppdatere knapper, oppdatere target og sjekke stoppknapp
 // Funksjon som oppdaterer target
     fjernfrako(h);
     startHeis(h);
     h->aktiv = 1;
 }
-
 */
