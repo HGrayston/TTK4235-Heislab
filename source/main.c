@@ -20,23 +20,32 @@ int main(){
         {
             sjekketasjeknapp(heis);
         }
-        feilsideavretn(heis);
-        oppdatertarget(heis);
-       
-
         
-        getRetning(heis);
+//        feilsideavretn(heis);
+        kjortilbestilling(heis);
+        
+// Nå skal heisen stå stille i etasjen den har fått bestilling fra
+// Her vil vi kjøre delay + oppdatere target
+        ventpabestilling(heis);
+
+
         startHeis(heis);
+
         while (heis->targetFloor != heis->currentFloor)
         {
+     //   sjekkomStopp(heis); // Må inneholde funksjon for oppdatering av target ++ logikk for når mellom etasjer
+     //       stoppknapp(heis);
+     //       sjekketasjeknapp(heis);
+     //       oppdatertarget(heis);
             getFloor(heis);
-         //   sjekkomStopp(heis); // Må inneholde funksjon for oppdatering av target ++ logikk for når mellom etasjer
-            stoppknapp(heis);
-            sjekketasjeknapp(heis);
-            oppdatertarget(heis);
         }
+        stoppHeis();
+        fjernfrako(heis);
+
     }
 
     return 0;
 }
 
+
+//skal kjøres hele tiden - sjekketasjeknapp
