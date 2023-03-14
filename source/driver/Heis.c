@@ -28,6 +28,11 @@ void getFloorinit(struct Heis* h){
 }
 
 void init(struct Heis* h){
+    for (int i = 0; i<4; i++){
+        for(int j = 0; j<3; j++){
+            elevio_buttonLamp(i, j, 0);
+        }
+    }
     nullstillko(h);
     elevio_init();
     getFloorinit(h);
@@ -72,6 +77,7 @@ void sjekketasjeknapp(struct Heis* h){
             h->ko[koindex] = JaNei;
             if(JaNei == 1){
                 prioritering(koindex,h);
+                elevio_buttonLamp(i, k, 1);
             }
             retn--;
         }
@@ -86,6 +92,10 @@ void getFloor(struct Heis* h){
     if (elevio_floorSensor() != -1 && elevio_floorSensor() != h->currentFloor)  
     {
         h->currentFloor = elevio_floorSensor();
+        if(h->currentFloor >= 0){
+            elevio_floorIndicator(h->currentFloor);
+        }
+        
     }
 }
 
@@ -289,6 +299,14 @@ void reorderque(struct Heis* h){
 
 void fjernfrako(struct Heis* h){
     h->prioriteringsko[0] = 0;
+
+    int knapptype = h->retning; 
+    if(h->retning == 1){
+        knapptype--;
+    } else{
+        knapptype++;
+    }
+    elevio_buttonLamp(h->currentFloor, knapptype, 0);
 /*
     int index = h->currentFloor + 4*h->retning;
     h->ko[index] = 0;
@@ -302,13 +320,17 @@ void fjernfrako(struct Heis* h){
 }
 
 
-/*
+
 void sjekkomStopp(struct Heis* h){
     if (h->ko[(h->retning)*4+(h->currentFloor)] == 1)
     {
-        stoppEtasje(h);
+        stoppHeis();
+        ventpabestilling(h);
+        startHeis(h);
     }
 }
+
+/*
 void stoppEtasje(struct Heis* h){
     elevio_motorDirection(0);
     h->aktiv = 0;
