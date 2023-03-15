@@ -275,7 +275,7 @@ void fjernfrako(struct Heis* h){
     int knapptype = 0;
     if(h->retning == 0){
         knapptype++;
-    
+    }
     elevio_buttonLamp(bestillingfra, knapptype, 0);
     reorderque(h);
 }
