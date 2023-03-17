@@ -11,7 +11,7 @@ struct Heis {
     int retning;                   // 0 er ned, 1 er opp. Initialiseres med 2 aner ikke om nødvendig
     int ko[Ko_str];                // indeks 0-3 er ned. 4-7 er opp. 1 betyr ja. 0 betyr nei
     int prioriteringsko[Ko_str];   // 0 betyr ingenting. 1-4 er ned. 4-7 er opp
-    time_t time;                   // Heisens timer som da resettes ved obstruksjoner og døråpne(). se timer.c
+    time_t time;                  // Heisens timer som da resettes ved obstruksjoner og døråpne(). se timer.c
 };
 
 // Initiellfunksjoner
