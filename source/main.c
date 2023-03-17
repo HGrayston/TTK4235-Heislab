@@ -10,6 +10,7 @@ int main(){
     struct Heis h;
     struct Heis* heis = &h;
 
+
     init(heis);
 
 
@@ -32,7 +33,7 @@ int main(){
 
         while (heis->targetFloor != heis->currentFloor)
         {     
-     //       stoppknapp(heis);
+            stoppknapp(heis);
             sjekketasjeknapp(heis);
             oppdatertarget(heis);
             getFloor(heis);
