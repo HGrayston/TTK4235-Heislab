@@ -50,7 +50,5 @@ int main(){
 
 
 
-////        feilsideavretn(heis);
-
 
 
