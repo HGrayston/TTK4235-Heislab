@@ -19,20 +19,17 @@ int main(){
     {
         while (heis->prioriteringsko[0] == 0)
         {
-
             sjekketasjeknapp(heis);
-            
         }
         kjortilbestilling(heis);
         ventpabestilling(heis);
 
 
-        if(heis->targetFloor != heis->currentFloor){
-            startHeis(heis);
-        }
+
 
         while (heis->targetFloor != heis->currentFloor)
         {     
+            startHeis(heis);
             stoppknapp(heis);
             sjekketasjeknapp(heis);
             oppdatertarget(heis);
@@ -40,7 +37,11 @@ int main(){
             sjekkomStopp(heis);
         }
         stoppHeis();
+        heis->targetFloor = heis->currentFloor;
         fjernfrako(heis);
+        heis->prioriteringsko[0] = 0;
+        reorderque(heis);
+
 
     }
 
@@ -49,6 +50,8 @@ int main(){
 
 
 
+
+////        feilsideavretn(heis);
 
 
 
